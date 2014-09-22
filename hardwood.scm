@@ -40,17 +40,19 @@
   msg)
 
 (define (spawn thunk)
+  ; FIXME
+  ; We need a way to ensure that the custom exception handler is set up
+  ; before anybody has the PID of the thread.
+  ; One way would be to make a tag in the spawner. The child would send that
+  ; tag to its parent, which would receive it with `??` (which is not yet
+  ; implemented)
   (let* ((pid (make-thread
                 (lambda ()
                   (setup-thread)
+                  ; (! parent tag)
                   (thunk)))))
-    ; FIXME
-    ; We need a way to ensure that the custom exception handler is set up
-    ; before anybody has the PID of the thread.
-    ; One way would be to make a tag in the spawner. The child would send that
-    ; tag to its parent, which would receive it with `??` (which is not yet
-    ; implemented)
     (thread-start! pid)
+    ; (?? (cut eqv? tag <>))
     pid))
 
 ; Primordial thread setup
