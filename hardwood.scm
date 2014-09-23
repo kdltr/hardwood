@@ -56,9 +56,11 @@
   (let* ((m (make-mutex))
          (pid (make-thread
                 (lambda ()
-                  (setup-thread)
-                  (mutex-unlock! m)
-                  (thunk)))))
+                  (with-exception-handler
+                    (handle-signal (current-exception-handler))
+                    (lambda ()
+                      (mutex-unlock! m)
+                      (thunk)))))))
     (mutex-lock! m)
     (thread-start! pid)
     ; wait for the thread to be ready before returning its pid
