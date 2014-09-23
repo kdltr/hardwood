@@ -3,32 +3,34 @@
 (define mailbox-head
   (make-parameter '()))
 
+(define-record hardwood tail lock signal)
+
 (define mailbox-tail
   (make-parameter '()))
 
-(define ((handle-signal hdl) s)
-  (cond
-    ((and (pair? s) (eqv? (car s) 'message-send))  (mailbox-tail
-                                                     (cons (cdr s)
-                                                           (mailbox-tail))))
-    ((and (symbol? s) (eqv? s 'message-receive))
-     (mailbox-head (append (mailbox-head)
-                           (reverse (mailbox-tail))))
-     (mailbox-tail '()))
-    (else  (hdl s))))
-
-(define (install-signal-handler)
-  (current-exception-handler (handle-signal (current-exception-handler))))
-
-(define (setup-thread)
-  (install-signal-handler))
+(define (setup-thread pid)
+  (let ((signal (make-mutex)))
+    (mutex-lock! signal)
+    (thread-specific-set! pid
+                          (make-hardwood '()
+                                         (make-mutex)
+                                         signal))))
 
 (define self current-thread)
 
 (define (wait-for-messages)
-  (signal 'message-receive)
-  (when (null? (mailbox-head))
-    (thread-suspend! (current-thread))))
+  (let* ((specific (thread-specific (current-thread)))
+         (lock (hardwood-lock specific))
+         (signal (hardwood-signal specific)))
+    (mutex-lock! lock)
+    (when (null? (hardwood-tail specific))
+      (mutex-unlock! lock)
+      (mutex-lock! signal)
+      (mutex-lock! lock))
+    (mailbox-head (append (mailbox-head)
+                          (reverse (hardwood-tail specific))))
+    (hardwood-tail-set! specific '())
+    (mutex-unlock! lock)))
 
 (define (?)
   (let ((head (mailbox-head)))
@@ -49,24 +51,23 @@
         (car tail)))))
 
 (define (! pid msg)
-  (thread-signal! pid (cons 'message-send msg))
+  (let* ((specific (thread-specific pid))
+         (lock (hardwood-lock specific))
+         (signal (hardwood-signal specific)))
+    (mutex-lock! lock)
+    (hardwood-tail-set! specific
+                        (cons msg
+                              (hardwood-tail specific)))
+    (mutex-unlock! lock)
+    (mutex-unlock! signal))
   msg)
 
 (define (spawn thunk)
-  (let* ((m (make-mutex))
-         (pid (make-thread
-                (lambda ()
-                  (with-exception-handler
-                    (handle-signal (current-exception-handler))
-                    (lambda ()
-                      (mutex-unlock! m)
-                      (thunk)))))))
-    (mutex-lock! m)
+  (let ((pid (make-thread thunk)))
+    (setup-thread pid)
     (thread-start! pid)
-    ; wait for the thread to be ready before returning its pid
-    (mutex-lock! m)
     pid))
 
 ; Primordial thread setup
-(setup-thread)
+(setup-thread (self))
 

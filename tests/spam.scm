@@ -3,7 +3,7 @@
 ; Lots-of-threads-and-messages test
 (define primordial (self))
 (define message-number 100)
-(define thread-number 1000)
+(define thread-number 100)
 
 (define (spam)
   (let loop ((i message-number))
