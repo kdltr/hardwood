@@ -9,12 +9,10 @@
   (make-parameter '()))
 
 (define (setup-thread pid)
-  (let ((signal (make-mutex)))
-    (mutex-lock! signal)
-    (thread-specific-set! pid
-                          (make-hardwood '()
-                                         (make-mutex)
-                                         signal))))
+  (thread-specific-set! pid
+                        (make-hardwood '()
+                                       (make-mutex)
+                                       (make-condition-variable))))
 
 (define self current-thread)
 
@@ -23,14 +21,15 @@
          (lock (hardwood-lock specific))
          (signal (hardwood-signal specific)))
     (mutex-lock! lock)
-    (when (null? (hardwood-tail specific))
-      (mutex-unlock! lock)
-      (mutex-lock! signal)
-      (mutex-lock! lock))
-    (mailbox-head (append (mailbox-head)
-                          (reverse (hardwood-tail specific))))
-    (hardwood-tail-set! specific '())
-    (mutex-unlock! lock)))
+    (if (null? (hardwood-tail specific))
+      (begin
+        (mutex-unlock! lock signal)
+        (wait-for-messages))
+      (begin
+        (mailbox-head (append (mailbox-head)
+                              (reverse (hardwood-tail specific))))
+        (hardwood-tail-set! specific '())
+        (mutex-unlock! lock)))))
 
 (define (?)
   (let ((head (mailbox-head)))
@@ -59,7 +58,7 @@
                         (cons msg
                               (hardwood-tail specific)))
     (mutex-unlock! lock)
-    (mutex-unlock! signal))
+    (condition-variable-signal! signal))
   msg)
 
 (define (spawn thunk)
