@@ -1,100 +1,70 @@
-(use srfi-18 data-structures matchable)
+(use srfi-1 srfi-18)
 
-(define mailbox
-  (make-parameter #f))
+(define mailbox-head
+  (make-parameter '()))
 
-(define lastmail
-  (make-parameter '(#t . #f)))
+(define mailbox-tail
+  (make-parameter '()))
 
 (define ((handle-signal hdl) s)
   (cond
-    ((and (pair? s) (eqv? (car s) 'message-send))  (queue-add! (mailbox)
-                                                               (cdr s)))
+    ((and (pair? s) (eqv? (car s) 'message-send))  (mailbox-tail
+                                                     (cons (cdr s)
+                                                           (mailbox-tail))))
     ((and (symbol? s) (eqv? s 'message-receive))
-     (let ((m (mailbox)))
-       (if (queue-empty? m)
-         (lastmail '(#t . #f))
-         (lastmail `(#f . ,(queue-remove! m))))))
+     (mailbox-head (append (mailbox-head)
+                           (reverse (mailbox-tail))))
+     (mailbox-tail '()))
     (else  (hdl s))))
 
 (define (install-signal-handler)
   (current-exception-handler (handle-signal (current-exception-handler))))
 
 (define (setup-thread)
-  (mailbox (make-queue))
   (install-signal-handler))
 
 (define self current-thread)
 
-(define (?)
+(define (wait-for-messages)
   (signal 'message-receive)
-  (let ((last (lastmail)))
-    (if (car last)
+  (when (null? (mailbox-head))
+    (thread-suspend! (current-thread))))
+
+(define (?)
+  (let ((head (mailbox-head)))
+    (cond
+      ((null? head)  (wait-for-messages)
+                     (?))
+      (else  (mailbox-head (cdr head))
+             (car head)))))
+
+(define (?? pred?)
+  (receive (head tail) (break pred? (mailbox-head))
+    (if (null? tail)
       (begin
-        (thread-suspend! (current-thread))
-        (?))
-      (cdr last))))
+        (wait-for-messages)
+        (?? pred?))
+      (begin
+        (mailbox-head (append head (cdr tail)))
+        (car tail)))))
 
 (define (! pid msg)
   (thread-signal! pid (cons 'message-send msg))
   msg)
 
 (define (spawn thunk)
-  ; FIXME
-  ; We need a way to ensure that the custom exception handler is set up
-  ; before anybody has the PID of the thread.
-  ; One way would be to make a tag in the spawner. The child would send that
-  ; tag to its parent, which would receive it with `??` (which is not yet
-  ; implemented)
-  (let* ((pid (make-thread
+  (let* ((m (make-mutex))
+         (pid (make-thread
                 (lambda ()
                   (setup-thread)
-                  ; (! parent tag)
+                  (mutex-unlock! m)
                   (thunk)))))
+    (mutex-lock! m)
     (thread-start! pid)
-    ; (?? (cut eqv? tag <>))
+    ; wait for the thread to be ready before returning its pid
+    (mutex-lock! m)
     pid))
 
 ; Primordial thread setup
 (setup-thread)
-
-
-; Tests
-
-; Lots-of-threads-and-messages test
-(define primordial (self))
-(define message-number 100)
-(define thread-number 1000)
-
-(define (spam)
-  (let loop ((i message-number))
-    (unless (zero? i)
-      (! primordial i)
-      (loop (sub1 i)))))
-
-(let loop ((i thread-number))
-  (unless (zero? i)
-    (spawn spam)
-    (loop (sub1 i))))
-
-(let loop ((i (* thread-number message-number)))
-  (unless (zero? i)
-    (?)
-    (loop (sub1 i))))
-
-(assert (zero? (queue-length (mailbox))))
-
-
-; Ping-pong test
-(define (pong-server)
-  (let ((m (?)))
-    (match m
-      ((pid 'ping) (! pid 'pong) (pong-server))
-      (else (pong-server)))))
-
-(define pong (spawn pong-server))
-(thread-sleep! 1) ; make sure the pong thread is set up (see note in (spawn))
-
-(! pong `(,(self) ping))
-(assert (eqv? (?) 'pong))
 
