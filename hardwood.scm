@@ -70,6 +70,3 @@
     (thread-start! pid)
     pid))
 
-; Primordial thread setup
-(setup-thread (self))
-
