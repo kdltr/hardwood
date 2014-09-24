@@ -1,12 +1,12 @@
 (use srfi-1 srfi-18)
 
+(define no-default (list 'no-default))
+(define timeout-condition (make-property-condition 'hardwood-timeout))
+
 (define mailbox-head
   (make-parameter '()))
 
 (define-record hardwood tail lock signal)
-
-(define mailbox-tail
-  (make-parameter '()))
 
 (define (setup-thread pid)
   (thread-specific-set! pid
@@ -16,38 +16,41 @@
 
 (define self current-thread)
 
-(define (wait-for-messages)
+(define (wait-for-messages timeout)
   (let* ((specific (thread-specific (current-thread)))
          (lock (hardwood-lock specific))
          (signal (hardwood-signal specific)))
     (mutex-lock! lock)
     (if (null? (hardwood-tail specific))
-      (begin
-        (mutex-unlock! lock signal)
-        (wait-for-messages))
+      (if (mutex-unlock! lock signal timeout)
+        (wait-for-messages timeout)
+        #f)
       (begin
         (mailbox-head (append (mailbox-head)
                               (reverse (hardwood-tail specific))))
         (hardwood-tail-set! specific '())
-        (mutex-unlock! lock)))))
+        (mutex-unlock! lock)
+        #t))))
 
-(define (?)
-  (let ((head (mailbox-head)))
-    (cond
-      ((null? head)  (wait-for-messages)
-                     (?))
-      (else  (mailbox-head (cdr head))
-             (car head)))))
+(define (?? pred? #!optional (timeout #f) (default no-default))
+  (let ((timeout (if (or (time? timeout) (not timeout))
+                   timeout
+                   (seconds->time
+                     (+ (time->seconds (current-time))
+                        timeout)))))
+    (receive (head tail) (break pred? (mailbox-head))
+      (if (null? tail)
+        (if (wait-for-messages timeout)
+          (?? pred? timeout default)
+          (if (eqv? default no-default)
+            (signal timeout-condition)
+            default))
+        (begin
+          (mailbox-head (append head (cdr tail)))
+          (car tail))))))
 
-(define (?? pred?)
-  (receive (head tail) (break pred? (mailbox-head))
-    (if (null? tail)
-      (begin
-        (wait-for-messages)
-        (?? pred?))
-      (begin
-        (mailbox-head (append head (cdr tail)))
-        (car tail)))))
+(define (? #!optional (timeout #f) (default no-default))
+  (?? (lambda x #t) timeout default))
 
 (define (! pid msg)
   (let* ((specific (thread-specific pid))
