@@ -11,7 +11,6 @@
       (else  (pong-server)))))
 
 (define pong (spawn pong-server))
-; (thread-sleep! 1) ; make sure the pong thread is set up (see note in (spawn))
 
 (! pong `(,(self) ping))
 (assert (eqv? (?) 'pong))
