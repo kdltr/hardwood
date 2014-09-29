@@ -1,17 +1,17 @@
-(use matchable)
+(use hardwood)
 
-(include "hardwood")
+; Make the primordial thread a hardwood thread, practical for testing
+(setup-thread (current-thread))
 
 ; Ping-pong test
 (define (pong-server)
-  (let ((m (?)))
-    (match m
-      ((pid 'ping)  (! pid 'pong)
-                    (pong-server))
-      (else  (pong-server)))))
+  (recv
+    ((pid 'ping)  (! pid 'pong)
+                  (pong-server))
+    (else  (pong-server))))
 
 (define pong (spawn pong-server))
 
 (! pong `(,(self) ping))
-(assert (eqv? (?) 'pong))
+(assert (eqv? (? 1 #f) 'pong))
 

@@ -1,4 +1,7 @@
-(include "hardwood")
+(use hardwood)
+
+; Make the primordial thread a hardwood thread, practical for testing
+(setup-thread (current-thread))
 
 ; Lots-of-threads-and-messages test
 (define primordial (self))
@@ -21,5 +24,5 @@
     (?)
     (loop (sub1 i))))
 
-(assert (zero? (length (append (mailbox-head) (mailbox-tail)))))
+(assert (not (? 1 #f)))
 

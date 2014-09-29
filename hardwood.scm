@@ -1,3 +1,20 @@
+(module hardwood
+
+        (timeout-condition
+         timeout-condition?
+         no-match-condition?
+         pid?
+         setup-thread
+         self
+         rcv-msg
+         ??
+         ?
+         recv
+         !
+         spawn)
+
+(import scheme chicken)
+
 (use srfi-1 srfi-18 matchable data-structures)
 
 (define timeout-condition
@@ -5,9 +22,9 @@
                                                      'message "Timeout while receiving")
                             (make-property-condition 'hardwood)
                             (make-property-condition 'timeout)))
-(define (hardwood-timeout-condition? exn)
-  (and ((condition-predicate 'hardwood) exn)
-       ((condition-predicate 'timeout) exn)))
+(define timeout-condition?
+  (conjoin (condition-predicate 'hardwood)
+           (condition-predicate 'timeout)))
 (define (no-default)
   (signal timeout-condition))
 
@@ -131,4 +148,6 @@
     (setup-thread thread)
     (thread-start! thread)
     (hardwood-pid (thread-specific thread))))
+
+)
 
