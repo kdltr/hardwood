@@ -1,4 +1,4 @@
-(use srfi-1 srfi-18 matchable)
+(use srfi-1 srfi-18 matchable data-structures)
 
 (define timeout-condition
   (make-composite-condition (make-property-condition 'exn
@@ -21,15 +21,19 @@
 (define mailbox-head
   (make-parameter '()))
 
-(define-record hardwood tail lock signal)
+(define-record pid thread)
 
-(define (setup-thread pid)
-  (thread-specific-set! pid
+(define-record hardwood tail lock signal pid)
+
+(define (setup-thread thread)
+  (thread-specific-set! thread
                         (make-hardwood '()
                                        (make-mutex)
-                                       (make-condition-variable))))
+                                       (make-condition-variable)
+                                       (make-pid thread))))
 
-(define self current-thread)
+(define (self)
+  (hardwood-pid (thread-specific (current-thread))))
 
 (define (wait-for-messages timeout)
   (let* ((specific (thread-specific (current-thread)))
@@ -89,7 +93,7 @@
              (lambda () default))))
 
 (define (? #!optional (timeout #f) (default no-default))
-  (?? (lambda x #t) timeout default))
+  (?? any? timeout default))
 
 (define-syntax recv
   (ir-macro-transformer
@@ -111,7 +115,7 @@
                   (lambda () ,timeout-proc))))))
 
 (define (! pid msg)
-  (let* ((specific (thread-specific pid))
+  (let* ((specific (thread-specific (pid-thread pid)))
          (lock (hardwood-lock specific))
          (signal (hardwood-signal specific)))
     (mutex-lock! lock)
@@ -123,8 +127,8 @@
   msg)
 
 (define (spawn thunk)
-  (let ((pid (make-thread thunk)))
-    (setup-thread pid)
-    (thread-start! pid)
-    pid))
+  (let ((thread (make-thread thunk)))
+    (setup-thread thread)
+    (thread-start! thread)
+    (hardwood-pid (thread-specific thread))))
 
