@@ -6,12 +6,12 @@
 ; Ping-pong test
 (define (pong-server)
   (recv
-    ((pid 'ping)  (! pid 'pong)
-                  (pong-server))
+    (((? pid? pid) 'ping)  (! pid 'pong)
+                           (pong-server))
     (else  (pong-server))))
 
 (define pong (spawn pong-server))
 
 (! pong `(,(self) ping))
-(assert (eqv? (? 1 #f) 'pong))
+(assert (eqv? (? 1 'fail) 'pong))
 
