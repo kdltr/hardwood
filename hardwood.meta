@@ -1,0 +1,6 @@
+((synopsis "An actor model library, inspired by Erlang")
+ (author "Adrien Ramos")
+ (files "hardwood.setup" "hardwood.meta" "hardwood.scm")
+ (license "BSD")
+ (category hell)
+ (needs matchable))

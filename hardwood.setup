@@ -1,0 +1,7 @@
+(compile -s "hardwood.scm" -J)
+(compile -s "hardwood.import.scm")
+
+(install-extension
+  'hardwood
+  '("hardwood.so" "hardwood.import.so")
+  '())
