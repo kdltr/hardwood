@@ -30,8 +30,10 @@
 (module hardwood
 
         (!
+         !?
          ?
          ??
+         make-tag
          no-match-condition?
          pid?
          rcv-msg

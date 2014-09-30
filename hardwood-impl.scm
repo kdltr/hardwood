@@ -31,7 +31,8 @@
   data-structures
   matchable
   srfi-1
-  srfi-18)
+  srfi-18
+  uuid)
 
 (define timeout-condition
   (make-composite-condition (make-property-condition 'exn
@@ -55,8 +56,8 @@
   (make-parameter '()))
 
 (define-record pid thread)
-
 (define-record hardwood tail lock signal pid)
+(define make-tag uuid-v4)
 
 (define (setup-thread thread)
   (thread-specific-set! thread
@@ -146,6 +147,13 @@
                                                           ,@clauses))))))
                   ,timeout
                   (lambda () ,timeout-proc))))))
+
+(define (!? pid msg #!optional (timeout #f) (default no-default))
+  (let ((tag (make-tag)))
+    (! pid (list (self) tag msg))
+    (recv
+      ((tag reply)  reply)
+      (after timeout (if (eqv? default no-default) (no-default) default)))))
 
 (define (! pid msg)
   (let* ((specific (thread-specific (pid-thread pid)))
