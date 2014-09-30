@@ -126,8 +126,13 @@
              no-default
              (lambda () default))))
 
-(define (? #!optional (timeout #f) (default no-default))
-  (?? any? timeout default))
+; Define `?` as a macro to avoid name-conflict in (match) and (recv) due
+; to hygiene
+(define-syntax ?
+  (syntax-rules ()
+    ((?)  (?? any?))
+    ((? timeout)  (?? any? timeout))
+    ((? timeout default)  (?? any? timeout default))))
 
 (define-syntax recv
   (ir-macro-transformer

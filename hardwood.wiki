@@ -92,7 +92,7 @@ Send {{msg}} to process {{pid}}.
 
 ==== ?
 
-<procedure>(? [TIMEOUT [DEFAULT]])</procedure>
+<syntax>(? [TIMEOUT [DEFAULT]])</syntax>
 
 Fetch the first message from the mailbox.
 
