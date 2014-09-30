@@ -1,4 +1,4 @@
-(use hardwood)
+(include "hardwood-impl")
 
 ; Make the primordial thread a hardwood thread, practical for testing
 (setup-thread (current-thread))
