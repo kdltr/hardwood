@@ -125,21 +125,16 @@
              no-default
              (lambda () default))))
 
-; Define `?` as a macro to avoid name-conflict in (match) and (recv) due
-; to hygiene
-(define-syntax ?
-  (syntax-rules ()
-    ((?)  (?? any?))
-    ((? timeout)  (?? any? timeout))
-    ((? timeout default)  (?? any? timeout default))))
+(define (? #!optional (timeout #f) (default no-default))
+  (?? any? timeout default))
 
 (define-syntax recv
   (ir-macro-transformer
     (lambda (expr inject compare)
-      (let* ((clauses (inject (cdr expr)))
-             (timeout-clause (assoc 'after clauses))
-             (timeout (and timeout-clause (cadr timeout-clause)))
-             (timeout-proc (and timeout-clause (caddr timeout-clause)))
+      (let* ((clauses (cdr expr))
+             (timeout-clause (alist-ref 'after clauses compare))
+             (timeout (and timeout-clause (car timeout-clause)))
+             (timeout-proc (and timeout-clause (cadr timeout-clause)))
              (clauses (remove (lambda (e) (eqv? (car e) 'after)) clauses)))
         `(rcv-msg (lambda (m)
                     (handle-exceptions exn
