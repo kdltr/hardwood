@@ -1,14 +1,10 @@
-(include "hardwood-impl")
-
-; Make the primordial thread a hardwood thread, practical for testing
-(setup-thread (current-thread))
-
+; Synchronous messaging test
 (define rpc-server
   (spawn
     (lambda ()
       (let loop ()
         (recv
-          ((from tag (’add a b))
+          ((from tag ('add a b))
            (! from (list tag (+ a b)))))
         (loop)))))
 

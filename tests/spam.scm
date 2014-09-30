@@ -1,8 +1,3 @@
-(include "hardwood-impl")
-
-; Make the primordial thread a hardwood thread, practical for testing
-(setup-thread (current-thread))
-
 ; Lots-of-threads-and-messages test
 (define primordial (self))
 (define message-number 100)
