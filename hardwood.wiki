@@ -239,6 +239,7 @@ in the following examples.
 
 == Version History
 
+; 0.2 : Implement process monitoring
 ; 0.1 : Initial release
 
 == License
