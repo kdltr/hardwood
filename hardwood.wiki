@@ -35,6 +35,13 @@ Germain.
 
 === Notes
 
+Hardwood processes are implemented as simple srfi-18 threads so they
+behave in the same ways. The name {{process}} was chosen as per
+Erlang's nomenclature.
+
+As a general rule, mutation should be avoided when using hardwood,
+especially inside messages themselves as there is no copy involved.
+
 {{TIMEOUT}} in the following definitions can be (as per srfi-18) either
 of the following:
 
