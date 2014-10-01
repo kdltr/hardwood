@@ -15,6 +15,9 @@ will. Also, some incompatibilities are to be expected.'''
 
 == Bugs and Limitations
 
+* There is currently no support for nodes
+* There is currently no standard way to know if a proccess died (like links and monitors)
+
 == Source code
 
 The code is available in a [[http://hg.upyum.com/hardwood|mercurial
