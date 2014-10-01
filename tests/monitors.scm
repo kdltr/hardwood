@@ -10,10 +10,22 @@
 (monitor pid2)
 
 (! pid1 'exit)
-(assert (recv (('DOWN pid1 'exited)  #t) (else  #f) (after 1 #f)))
+(assert
+  (recv
+    (('DOWN (? (cut eqv? <> pid1)) 'exited)  #t)
+    (else  #f)
+    (after 1 #f)))
 
 (! pid2 'crash)
-(assert (recv (('DOWN pid1 ('condition exn))  #t) (else  #f) (after 1 #f)))
+(assert
+  (recv
+    (('DOWN (? (cut eqv? <> pid2)) ('condition exn))  #t)
+    (else  #f)
+    (after 1 #f)))
 
 (monitor pid1)
-(assert (recv (('DOWN pid1 'no-process)  #t) (else  #f) (after 1 #f)))
+(assert
+  (recv
+    (('DOWN (? (cut eqv? <> pid1)) 'no-process)  #t)
+    (else  #f)
+    (after 1 #f)))
