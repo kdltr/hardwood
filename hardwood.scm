@@ -34,8 +34,10 @@
          ?
          ??
          make-tag
+         monitor
          no-match-condition?
          pid?
+         process-exist?
          rcv-msg
          recv
          self

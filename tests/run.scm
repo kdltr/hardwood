@@ -5,3 +5,4 @@
 (load "ping")
 (load "rpc")
 (load "spam")
+(load "monitors")

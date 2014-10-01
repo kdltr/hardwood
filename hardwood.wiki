@@ -16,7 +16,6 @@ will. Also, some incompatibilities are to be expected.'''
 == Bugs and Limitations
 
 * There is currently no support for nodes
-* There is currently no standard way to know if a proccess died (like links and monitors)
 
 == Source code
 
@@ -64,13 +63,19 @@ Condition object raised when a timeout is reached.
 
 <procedure>(timeout-condition? OBJ)</procedure>
 
-Whether {{OBJ}} is {{timeout-condition}} or not.
+Whether {{obj}} is {{timeout-condition}} or not.
 
 ==== pid?
 
 <procedure>(pid? OBJ)</procedure>
 
-Whether {{OBJ}} is a {{pid}} object or not.
+Whether {{obj}} is a {{pid}} object or not.
+
+==== process-exist?
+
+<procedure>(process-exist? PID)</procedure>
+
+Whether {{pid}} is a running process or not.
 
 === Fundamental Operations
 
@@ -93,6 +98,23 @@ Return the current process' {{pid}}.
 {{Thread}} must be a srfi-18 thread.
 
 Make {{thread}} a hardwood process.
+
+==== monitor
+
+<procedure>(monitor PID)</procedure>
+
+Start monitoring the {{pid}} process and return {{pid}} back.
+
+If it exits, either normally or not, the caller process will be informed
+with a message of the form:
+
+{{('DOWN pid reason)}}
+
+where {{reason}} can be one of the following:
+
+; symbol {{exited}} : the process exited normally
+; symbol {{no-process}} : the process didn't exist
+; list {{('condition c)}} : the process exited because of condition {{c}}
 
 ==== !
 
@@ -199,6 +221,20 @@ in the following examples.
         (loop)))))
 
 (!? rpc-server '(add 21 21))      ---> 42
+</enscript>
+
+=== Monitoring processes
+
+<enscript highlight="scheme">
+(define monitored-server
+  (monitor
+    (spawn
+      (lambda ()
+        (recv
+          (x  (/ 0)))))))
+
+(! monitored-server 'msg)
+(?)                --> ('DOWN monitored-server ('condition exn))
 </enscript>
 
 == Version History

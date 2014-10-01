@@ -56,7 +56,7 @@
   (make-parameter '()))
 
 (define-record pid thread)
-(define-record hardwood tail lock signal pid)
+(define-record hardwood tail lock signal pid monitors monitors-lock)
 (define make-tag uuid-v4)
 
 (define (setup-thread thread)
@@ -64,7 +64,14 @@
                         (make-hardwood '()
                                        (make-mutex)
                                        (make-condition-variable)
-                                       (make-pid thread))))
+                                       (make-pid thread)
+                                       '()
+                                       (make-mutex))))
+
+(define (process-exist? pid)
+  (let ((state (thread-state (pid-thread pid))))
+    (not (or (eqv? state 'terminated)
+             (eqv? state 'dead)))))
 
 (define (self)
   (hardwood-pid (thread-specific (current-thread))))
@@ -172,9 +179,38 @@
     (condition-variable-signal! signal))
   msg)
 
+(define (alert-monitors reason)
+  (let* ((msg (list 'DOWN (self) reason))
+         (specific (thread-specific (current-thread)))
+         (lock (hardwood-monitors-lock specific))
+         (monitors (and (mutex-lock! lock)
+                        (hardwood-monitors specific))))
+    (for-each (cut ! <> msg) monitors)
+    (mutex-unlock! lock)))
+
+(define (monitor-thunk thunk)
+  (lambda ()
+    (handle-exceptions exn
+                       (begin
+                         (alert-monitors (list 'condition exn))
+                         (abort exn))
+      (thunk))
+    (alert-monitors 'exited)))
+
 (define (spawn thunk)
-  (let ((thread (make-thread thunk)))
+  (let ((thread (make-thread (monitor-thunk thunk))))
     (setup-thread thread)
     (thread-start! thread)
     (hardwood-pid (thread-specific thread))))
+
+(define (monitor pid)
+  (if (process-exist? pid)
+    (let* ((specific (thread-specific (pid-thread pid)))
+           (lock (hardwood-monitors-lock specific))
+           (monitors (and (mutex-lock! lock)
+                          (hardwood-monitors specific))))
+      (hardwood-monitors-set! specific (cons (self) monitors))
+      (mutex-unlock! lock))
+    (! (self) (list 'DOWN pid 'no-process)))
+  pid)
 
