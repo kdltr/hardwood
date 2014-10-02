@@ -33,8 +33,10 @@
          !?
          ?
          ??
+         demonitor
          make-tag
          monitor
+         monitor-ref?
          no-match-condition?
          pid?
          process-exist?

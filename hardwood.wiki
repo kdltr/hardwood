@@ -59,11 +59,11 @@ Condition object raised when a timeout is reached.
 
 === Predicates
 
-==== timeout-condition?
+==== monitor-ref?
 
-<procedure>(timeout-condition? OBJ)</procedure>
+<procedure>(monitor-ref? OBJ)</procedure>
 
-Whether {{obj}} is {{timeout-condition}} or not.
+Whether {{obj}} is a monitor reference or not.
 
 ==== pid?
 
@@ -76,6 +76,12 @@ Whether {{obj}} is a {{pid}} object or not.
 <procedure>(process-exist? PID)</procedure>
 
 Whether {{pid}} is a running process or not.
+
+==== timeout-condition?
+
+<procedure>(timeout-condition? OBJ)</procedure>
+
+Whether {{obj}} is {{timeout-condition}} or not.
 
 === Fundamental Operations
 
@@ -99,22 +105,38 @@ Return the current process' {{pid}}.
 
 Make {{thread}} a hardwood process.
 
+==== make-tag
+
+<procedure>(make-tag)</procedure>
+
+Return a new {{tag}}.
+
+Tags are guaranteed to be universally unique.
+
 ==== monitor
 
 <procedure>(monitor PID)</procedure>
 
-Start monitoring the {{pid}} process and return {{pid}} back.
+The calling process starts monitoring the {{pid}} process.
 
-If it exits, either normally or not, the caller process will be informed
-with a message of the form:
+Return a monitor reference {{ref}}.
 
-{{('DOWN pid reason)}}
+If that process exits, either normally or not, the caller process will
+be informed with a message of the form:
+
+{{('DOWN ref pid reason)}}
 
 where {{reason}} can be one of the following:
 
 ; symbol {{exited}} : the process exited normally
 ; symbol {{no-process}} : the process didn't exist
 ; list {{('condition c)}} : the process exited because of condition {{c}}
+
+==== demonitor
+
+<procedure>(demonitor ref)</procedure>
+
+Stop the monitor associated with {{ref}}.
 
 ==== !
 
@@ -141,14 +163,6 @@ Fetch the first message from the mailbox.
 <procedure>(?? PRED [TIMEOUT [DEFAULT]])</procedure>
 
 Fetch the next message that matches {{pred}}.
-
-==== make-tag
-
-<procedure>(make-tag)</procedure>
-
-Return a new {{tag}}.
-
-Tags are guaranteed to be universally unique.
 
 ==== !?
 
@@ -234,20 +248,21 @@ in the following examples.
 === Monitoring processes
 
 <enscript highlight="scheme">
-(define monitored-server
-  (monitor
-    (spawn
-      (lambda ()
-        (recv
-          (x  (/ 0)))))))
+(define pid
+  (spawn
+    (lambda ()
+      (recv
+        (x  (/ 0)))))))
 
-(! monitored-server 'msg)
-(?)                --> ('DOWN monitored-server ('condition exn))
+(define ref (monitor pid))
+
+(! pid 'msg)
+(?)                --> ('DOWN ref pid ('condition exn))
 </enscript>
 
 == Version History
 
-; 0.3 : Bug fix; `!!` function; spawn accepts procedure arguments
+; 0.3 : Bug fix; `!!` function; spawn accepts procedure arguments; monitor references
 ; 0.2 : Implement process monitoring
 ; 0.1 : Initial release
 
