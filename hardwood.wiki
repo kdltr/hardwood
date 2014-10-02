@@ -122,6 +122,14 @@ where {{reason}} can be one of the following:
 
 Send {{msg}} to process {{pid}}.
 
+==== !!
+
+<procedure>(!! LIST MSG)</procedure>
+
+{{List}} must be a list of pids.
+
+Send {{msg}} to all pids in {{list}}
+
 ==== ?
 
 <syntax>(? [TIMEOUT [DEFAULT]])</syntax>

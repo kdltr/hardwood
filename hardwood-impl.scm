@@ -180,13 +180,16 @@
     (condition-variable-signal! signal))
   msg)
 
+(define (!! pids msg)
+  (for-each (cut ! <> msg) pids))
+
 (define (alert-monitors reason)
   (let* ((msg (list 'DOWN (self) reason))
          (specific (thread-specific (current-thread)))
          (lock (hardwood-monitors-lock specific))
          (monitors (and (mutex-lock! lock)
                         (hardwood-monitors specific))))
-    (for-each (cut ! <> msg) monitors)
+    (!! monitors msg)
     (mutex-unlock! lock)))
 
 (define (monitor-thunk thunk)
