@@ -49,8 +49,9 @@
 ; Send a patch for matchable so that it signals an exception instead of using
 ; (error)
 (define (no-match-condition? exn)
-  (string=? "no matching pattern"
-            (get-condition-property exn 'exn 'message "")))
+  (and (condition? exn)
+       (string=? "no matching pattern"
+                 (get-condition-property exn 'exn 'message ""))))
 
 (define mailbox-head
   (make-parameter '()))
