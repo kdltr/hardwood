@@ -1,4 +1,5 @@
 (repo hg "http://hg.upyum.com/hardwood/")
 (uri targz "http://hg.upyum.com/{egg-name}/archive/{egg-release}.tar.gz")
+(release "0.3")
 (release "0.2")
 (release "0.1")
