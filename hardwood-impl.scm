@@ -201,8 +201,11 @@
       (thunk))
     (alert-monitors 'exited)))
 
-(define (spawn thunk)
-  (let ((thread (make-thread (monitor-thunk thunk))))
+(define (spawn proc . args)
+  (let ((thread (make-thread
+                  (monitor-thunk
+                    (lambda ()
+                      (apply proc args))))))
     (setup-thread thread)
     (thread-start! thread)
     (hardwood-pid (thread-specific thread))))

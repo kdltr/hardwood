@@ -81,9 +81,9 @@ Whether {{pid}} is a running process or not.
 
 ==== spawn
 
-<procedure>(spawn THUNK)</procedure>
+<procedure>(spawn PROC . ARGS)</procedure>
 
-Create a process running {{thunk}} and returns its {{pid}}.
+Create a process running {{(proc args ...)}} and returns its {{pid}}.
 
 ==== self
 
@@ -247,6 +247,7 @@ in the following examples.
 
 == Version History
 
+; 0.3 : Bug fix; `!!` function; spawn accepts procedure arguments
 ; 0.2 : Implement process monitoring
 ; 0.1 : Initial release
 
