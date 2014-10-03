@@ -150,7 +150,7 @@
              (timeout-clause (alist-ref 'after clauses compare))
              (timeout (and timeout-clause (car timeout-clause)))
              (timeout-proc (and timeout-clause (cadr timeout-clause)))
-             (clauses (remove (lambda (e) (eqv? (car e) 'after)) clauses)))
+             (clauses (alist-delete 'after clauses compare)))
         `(rcv-msg (lambda (m)
                     (handle-exceptions exn
                                        (if (no-match-condition? exn)
@@ -166,7 +166,7 @@
   (let ((tag (make-tag)))
     (! pid (list (self) tag msg))
     (recv
-      ((tag reply)  reply)
+      (((? (cut equal? <> tag)) reply)  reply)
       (after timeout (if (eqv? default no-default) (no-default) default)))))
 
 (define (! pid msg)
@@ -201,7 +201,7 @@
          (lock (hardwood-monitors-lock specific))
          (monitors (and (mutex-lock! lock)
                         (hardwood-monitors specific))))
-    (hardwood-monitors-set! specific (remove (cut equal? ref <>) monitors))
+    (hardwood-monitors-set! specific (delete ref monitors))
     (mutex-unlock! lock)))
 
 (define (alert-monitors reason)
