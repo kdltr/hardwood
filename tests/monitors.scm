@@ -1,44 +1,39 @@
-(define (monitors-test)
-  (recv
-    ('crash  (abort 'some-condition))
-    ('exit  (void))))
+(test-group "Monitors"
 
-(define pid1 (spawn monitors-test))
-(define pid2 (spawn monitors-test))
-(define pid3 (spawn monitors-test))
+  (define (monitors-test)
+    (recv
+      ('crash  (abort 'some-condition))
+      ('exit  (void))))
 
-(define ref1 (monitor pid1))
-(define ref2 (monitor pid2))
-(define ref3 (monitor pid3))
+  (define pid1 (spawn monitors-test))
+  (define pid2 (spawn monitors-test))
+  (define pid3 (spawn monitors-test))
 
-; Normal exit
-(! pid1 'exit)
-(assert
-  (recv
-    (('DOWN ref pid 'exited)  (and (equal? ref ref1)
-                                   (equal? pid pid1)))
-    (else  #f)
-    (after 1 #f)))
+  (define ref1 (monitor pid1))
+  (define ref2 (monitor pid2))
+  (define ref3 (monitor pid3))
 
-; Excptional exit
-(! pid2 'crash)
-(assert
-  (recv
-    (('DOWN ref pid ('condition 'some-condition))  (and (equal? ref ref2)
-                                                        (equal? pid pid2)))
-    (else  #f)
-    (after 1 #f)))
+  ; Normal exit
+  (! pid1 'exit)
+  (test "normal exit"
+    (list 'DOWN ref1 pid1 'exited)
+    (? 1 #f))
 
-; Demonitoring
-(demonitor ref3)
-(! pid3 'exit)
-(assert (? 0.2 #t))
+  ; Excptional exit
+  (! pid2 'crash)
+  (test "exit with condition"
+    (list 'DOWN ref2 pid2 (list 'condition 'some-condition))
+    (? 1 #f))
 
-; Dead process
-(define ref4 (monitor pid1))
-(assert
-  (recv
-    (('DOWN ref pid 'no-process)  (and (equal? ref ref4)
-                                       (equal? pid pid1)))
-    (else  #f)
-    (after 1 #f)))
+  ; Demonitoring
+  (demonitor ref3)
+  (! pid3 'exit)
+  (test "demonitoring"
+    #t
+    (? 0.2 #t))
+
+  ; Dead process
+  (define ref4 (monitor pid1))
+  (test "dead process"
+    (list 'DOWN ref4 pid1 'no-process)
+    (? 1 #f)))

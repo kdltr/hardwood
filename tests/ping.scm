@@ -1,12 +1,15 @@
 ; Ping-pong test
-(define (pong-server)
-  (recv
-    (((? pid? pid) 'ping)  (! pid 'pong)
+
+(test-group "Ping"
+
+  (define (pong-server)
+    (recv
+      (((? pid? pid) 'ping)  (! pid 'pong)
                            (pong-server))
-    (else  (pong-server))))
+      (else  (pong-server))))
 
-(define pong (spawn pong-server))
+  (define pong (spawn pong-server))
 
-(! pong `(,(self) ping))
-(assert (eqv? (?? any? 1 'fail) 'pong))
+  (! pong `(,(self) ping))
+  (test 'pong (? 1 #f)))
 

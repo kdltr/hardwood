@@ -3,4 +3,5 @@
  (files "hardwood.setup" "hardwood.meta" "hardwood-impl.scm" "hardwood.scm")
  (license "BSD")
  (category hell)
- (needs matchable uuid))
+ (needs matchable uuid)
+ (test-depends test))

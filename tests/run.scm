@@ -1,4 +1,4 @@
-(use hardwood)
+(use test hardwood)
 
 (setup-thread (current-thread))
 
@@ -6,3 +6,5 @@
 (load "rpc")
 (load "spam")
 (load "monitors")
+
+(test-exit)

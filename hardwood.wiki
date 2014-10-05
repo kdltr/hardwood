@@ -262,6 +262,7 @@ in the following examples.
 
 == Version History
 
+; 0.4 : Bug fixes, tests now use the [[test]] egg
 ; 0.3 : Bug fix; `!!` function; spawn accepts procedure arguments; monitor references
 ; 0.2 : Implement process monitoring
 ; 0.1 : Initial release
