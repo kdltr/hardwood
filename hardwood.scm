@@ -35,6 +35,7 @@
          ?
          ??
          demonitor
+         handle-recv-exceptions
          make-tag
          monitor
          monitor-ref?

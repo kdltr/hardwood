@@ -114,13 +114,18 @@
           (begin
             (mailbox-head (cdr head))
             (receive (ok? . vals)
-                     (handle-exceptions exn
-                                        (begin
-                                          (mailbox-head (append (reverse prev)
-                                                                (cons msg
-                                                                      (mailbox-head))))
-                                          (abort exn))
-                       (proc msg))
+                     (##core#app
+                      (lambda (thunk)
+                        (handle-exceptions exn
+                                           (begin
+                                             (mailbox-head
+                                               (append
+                                                 (reverse prev)
+                                                 (cons msg
+                                                       (mailbox-head))))
+                                             (abort exn))
+                                           (thunk)))
+                      (lambda () (proc msg)))
                      (if ok?
                        (begin
                          (mailbox-head (append (reverse prev)
@@ -143,6 +148,13 @@
     ((? timeout)  (?? any? timeout))
     ((? timeout default)  (?? any? timeout default))))
 
+(define (handle-recv-exceptions thunk)
+  (handle-exceptions exn
+                     (if (no-match-condition? exn)
+                       #f
+                       (abort exn))
+                     (thunk)))
+
 (define-syntax recv
   (ir-macro-transformer
     (lambda (expr inject compare)
@@ -152,13 +164,12 @@
              (timeout-proc (and timeout-clause (cadr timeout-clause)))
              (clauses (alist-delete 'after clauses compare)))
         `(rcv-msg (lambda (m)
-                    (handle-exceptions exn
-                                       (if (no-match-condition? exn)
-                                         #f
-                                         (abort exn))
-                      (apply values (cons #t
-                                          (receive (match m
-                                                          ,@clauses))))))
+                    (##core#app
+                     handle-recv-exceptions
+                     (lambda ()
+                       (apply values (cons #t
+                                           (receive (match m
+                                                           ,@clauses)))))))
                   ,timeout
                   (lambda () ,timeout-proc))))))
 
@@ -217,11 +228,14 @@
 
 (define (monitor-thunk thunk)
   (lambda ()
-    (handle-exceptions exn
-                       (begin
-                         (alert-monitors (list 'condition exn))
-                         (abort exn))
-      (thunk))
+    (##core#app
+     (lambda (thunk)
+       (handle-exceptions exn
+                          (begin
+                            (alert-monitors (list 'condition exn))
+                            (abort exn))
+                          (thunk)))
+     thunk)
     (alert-monitors 'exited)))
 
 (define (spawn proc . args)
