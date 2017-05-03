@@ -35,15 +35,13 @@
          ?
          ??
          demonitor
-         handle-recv-exceptions
          make-tag
          monitor
          monitor-ref?
          no-match-condition?
          pid?
          process-exist?
-         rcv-msg
-         recv
+         (recv handle-recv-exceptions rcv-msg)
          self
          setup-thread
          spawn
