@@ -1,6 +1,6 @@
 (use test hardwood)
 
-(setup-thread (current-thread))
+(setup-thread)
 
 (load "ping")
 (load "rpc")
