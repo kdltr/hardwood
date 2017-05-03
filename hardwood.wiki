@@ -195,7 +195,7 @@ the Termite paper and implementation as it uses the syntax of the
 
 Inside csi:
 <enscript highlight="scheme">
-(setup-thread (current-process))
+(setup-thread (current-thread))
 </enscript>
 
 This can be useful to communicate with other processes from the REPL, as
