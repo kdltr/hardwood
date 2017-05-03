@@ -61,7 +61,7 @@
 (define-record monitor-ref monitor target tag)
 (define make-tag uuid-v4)
 
-(define (setup-thread thread)
+(define (setup-thread #!optional (thread (current-thread)))
   (thread-specific-set! thread
                         (make-hardwood '()
                                        (make-mutex)

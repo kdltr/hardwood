@@ -99,11 +99,12 @@ Return the current process' {{pid}}.
 
 ==== setup-thread
 
-<procedure>(setup-thread THREAD)</procedure>
-
-{{Thread}} must be a srfi-18 thread.
+<procedure>(setup-thread [THREAD])</procedure>
 
 Make {{thread}} a hardwood process.
+
+If given, {{thread}} must be a srfi-18 thread. Otherwise, the current
+thread is used.
 
 ==== make-tag
 
