@@ -41,15 +41,23 @@
          no-match-condition?
          pid?
          process-exist?
-         (recv handle-recv-exceptions rcv-msg)
+         (recv handle-recv-exceptions rcv-msg alist-ref)
          self
          setup-thread
          spawn
          timeout-condition
          timeout-condition?)
 
-(import scheme chicken)
+(import scheme
+        chicken
+        (chicken data-structures)
+        srfi-1
+        srfi-18
+        matchable
+        uuid)
 
-(include "hardwood-impl")
+(import-for-syntax (chicken data-structures) srfi-1)
+
+(include "hardwood-impl.scm")
 
 )

@@ -27,13 +27,6 @@
 ;; ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 
-(use
-  data-structures
-  matchable
-  srfi-1
-  srfi-18
-  uuid)
-
 (define timeout-condition
   (make-composite-condition (make-property-condition 'exn
                                                      'message "Timeout while receiving")
@@ -144,9 +137,9 @@
 ; to hygiene
 (define-syntax ?
   (syntax-rules ()
-    ((?)  (?? any?))
-    ((? timeout)  (?? any? timeout))
-    ((? timeout default)  (?? any? timeout default))))
+    ((?)  (?? (constantly #t)))
+    ((? timeout)  (?? (constantly #t) timeout))
+    ((? timeout default)  (?? (constantly #t) timeout default))))
 
 (define (handle-recv-exceptions thunk)
   (handle-exceptions exn

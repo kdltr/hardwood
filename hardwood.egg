@@ -1,0 +1,7 @@
+((synopsis "An actor model library, inspired by Erlang")
+ (author "Adrien Ramos")
+ (category hell)
+ (license "BSD")
+ (test-dependencies test)
+ (dependencies matchable uuid)
+ (components (extension hardwood)))

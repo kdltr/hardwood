@@ -1,4 +1,4 @@
-(use test hardwood)
+(import test hardwood)
 
 (setup-thread)
 
