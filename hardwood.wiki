@@ -178,7 +178,7 @@ returns {{reply}}.
 
 ==== recv
 
-<syntax>(recv PAT [...] [(after TIMEOUT TMO-ACTION)])</syntax>
+<syntax>(recv PAT [...] [(after TIMEOUT TMO-ACTION ...)])</syntax>
 
 Match incoming messages against {{PAT ...}}.
 

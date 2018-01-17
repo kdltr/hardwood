@@ -161,7 +161,7 @@
       (let* ((clauses (cdr expr))
              (timeout-clause (alist-ref 'after clauses compare))
              (timeout (and timeout-clause (car timeout-clause)))
-             (timeout-proc (and timeout-clause (cadr timeout-clause)))
+             (timeout-body (if timeout-clause (cdr timeout-clause) '(#f)))
              (clauses (alist-delete 'after clauses compare)))
         `(rcv-msg (lambda (m)
                     (##core#app
@@ -171,7 +171,7 @@
                                            (receive (match m
                                                            ,@clauses)))))))
                   ,timeout
-                  (lambda () ,timeout-proc))))))
+                  (lambda () ,@timeout-body))))))
 
 (define (!? pid msg #!optional (timeout #f) (default no-default))
   (let ((tag (make-tag)))
